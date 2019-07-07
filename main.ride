@@ -1,0 +1,10 @@
+{-# STDLIB_VERSION 3 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+@Callable(i)
+func registerParcel(senderAddress: String, recieverAddress: String, weight:Int, wp:Int) = {
+    let writeSet = WriteSet([DataEntry("senderAdress",senderAddress), DataEntry("recieverAdress",recieverAddress), DataEntry("historyBytes",this.bytes), DataEntry("weight",weight), DataEntry("wp",wp)])
+    let tranferSet = TransferSet([])
+    ScriptResult(writeSet,tranferSet)
+}
