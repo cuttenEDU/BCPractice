@@ -4,7 +4,8 @@
 
 @Callable(i)
 func registerParcel(senderAddress: String, recieverAddress: String, weight:Int, wp:Int) = {
-    let writeSet = WriteSet([DataEntry("senderAdress",senderAddress), DataEntry("recieverAdress",recieverAddress), DataEntry("historyBytes",this.bytes), DataEntry("weight",weight), DataEntry("wp",wp)])
-    let tranferSet = TransferSet([])
+    let writeSet = WriteSet([DataEntry("senderAdress",senderAddress), DataEntry("recieverAdress",recieverAddress), DataEntry("historyBytes",this.bytes), DataEntry("weight",weight), DataEntry("wp",wp), DataEntry("isHere",true)])
+    let tranferSet = TransferSet([DataTransaction(writeSet,12,100000,tx.timestamp,1,i.caller,i.callerPublicKey,0,[])])
+
     ScriptResult(writeSet,tranferSet)
 }
