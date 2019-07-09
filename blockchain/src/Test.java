@@ -3,16 +3,19 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 
+import java.util.ArrayList;
+import java.util.Scanner;
+
 class Test
 {
-    public static void main(String[] args) throws Exception
-    {
-        String password = "SHA-256";
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        String in = scanner.next();
+        System.out.println(in);
+        in = scanner.next();
+        System.out.println(in);
+        in = scanner.next();
+        System.out.println(in);
 
-        Hasher hasher = Hashing.sha256().newHasher();
-        hasher.putString(password, Charsets.UTF_8);
-        HashCode sha256 = hasher.hash();
-
-        System.out.println(sha256);
     }
 }
