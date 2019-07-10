@@ -1,0 +1,18 @@
+newtr p00001 registered:postoffice1
+newtr p00002 registered:postoffice1
+newtr p00003 registered:postoffice1
+newtr p00004 registered:postoffice1
+newtr p00001 moved:sortingcentre1
+newtr p00002 moved:sortingcentre1
+newtr p00003 moved:sortingcentre2
+newtr p00004 moved:sortingcentre2
+newtr p00002 moved:sortingcentre3
+newtr p00003 moved:sortingcentre3
+newtr p00005 registered:postoffice2
+newtr p00006 registered:postoffice2
+newtr p00005 moved:sortingcentre3
+newtr p00006 moved:sortingcentre3
+newtr p00001 arrived:postoffice2
+newtr p00002 arrived:postoffice2
+newtr p00003 arrived:postoffice2
+enddemo
