@@ -13,16 +13,18 @@ public class Block {
 
     private int id;
     private Transaction[] transactions;
+    private PublicKey publicKey;
     private int nextEmpty;
     private byte[] signature;
     private HashCode hashCode;
     private HashCode prevHashCode;
 
-    public Block(int id) {
+    public Block(int id, PublicKey publicKey) {
         transactions = new Transaction[BLOCK_SIZE];
         this.id = id;
         nextEmpty = 0;
         prevHashCode = null;
+        this.publicKey = publicKey;
     }
 
     void addTransaction(Transaction transaction) {
@@ -43,18 +45,18 @@ public class Block {
         return transactions;
     }
 
-    String getInfo() {
-        return "Block #" + id + "\t Hashcode: " + hashCode + "\t Previous hashcode: " + prevHashCode + "\t Signature: " + (signature == null ? "null" : Hasher.bytesToHex(signature));
+    String getInfo() throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        return "Block #" + id + "\t Hash: " + hashCode + "\t Prevhash: " + prevHashCode + "\t Sig: " + (signature == null ? "null" : Hasher.bytesToHex(signature)) + "\tisValid: " + (signature == null ? "null" : String.valueOf(isValid()));
     }
 
-    String getTruncInfo() {
-        return "Block #" + id + "\t Hashcode: " + (hashCode == null ? "null" : truncate(hashCode.toString())) + "\t Previous hashcode: " + (prevHashCode == null ? "null" : truncate(prevHashCode.toString())) + "\t Signature: " + (signature == null ? "null" : truncate(Hasher.bytesToHex(signature)));
+    String getTruncInfo() throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        return "Block #" + id + "\t Hash: " + (hashCode == null ? "null" : truncate(hashCode.toString())) + "\t Prevhash: " + (prevHashCode == null ? "null" : truncate(prevHashCode.toString())) + "\t Sig: " + (signature == null ? "null" : truncate(Hasher.bytesToHex(signature))) + "\tisValid: " + (signature == null ? "null" : String.valueOf(isValid()));
     }
 
     String truncate(String string) {
         if (string == null)
             return null;
-        return string.substring(0, 6) + "..." + string.substring(string.length() - 8, string.length() - 1);
+        return string.substring(0, 5) + "..." + string.substring(string.length() - 6, string.length() - 1);
     }
 
 
@@ -120,5 +122,23 @@ public class Block {
             builder.append("0");
         }
         return builder.append(string).toString();
+    }
+
+    boolean isValid() throws InvalidKeyException, SignatureException, NoSuchAlgorithmException {
+        Signature ecdsaVerify = Signature.getInstance("SHA256withECDSA");
+        ecdsaVerify.initVerify(publicKey);
+        ecdsaVerify.update(hashCode.asBytes());
+        return ecdsaVerify.verify(signature);
+    }
+
+    boolean contains(String parcelTN){
+        for (Transaction transaction:transactions) {
+            if (transaction == null)
+                continue;
+            ParcelDataTransaction parcelDataTransaction = (ParcelDataTransaction) transaction;
+            if (((ParcelDataTransaction) transaction).getParcelTN().equals(parcelTN))
+                return true;
+        }
+        return false;
     }
 }
