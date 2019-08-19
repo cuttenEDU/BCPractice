@@ -14,6 +14,7 @@ public class Client {
     private static KeyPair keyPair;
     private static ArrayList<Block> mainBlockArray;
     private boolean demoMode;
+    private String divider = "---------------------------------------------------------------------------------------------------------------------------------------------------------";
 
 
     public Client(String publicKey, String privateKey) throws Exception {
@@ -44,6 +45,7 @@ public class Client {
                     parcelTN = scanner.next();
                     String mode = scanner.next();
                     boolean full;
+                    boolean all = parcelTN.equalsIgnoreCase("all");
                     if (mode.equalsIgnoreCase("-f"))
                         full = true;
                     else if (mode.equalsIgnoreCase("-b"))
@@ -54,14 +56,24 @@ public class Client {
                     }
 
                     for (Block block : mainBlockArray) {
-                        System.out.println(full ? block.getInfo() : block.getTruncInfo());
-                        for (Transaction transaction : block.getTransactions()) {
-                            ParcelDataTransaction parcelDataTransaction = (ParcelDataTransaction) transaction;
-                            if (parcelDataTransaction == null)
-                                break;
-                            if (parcelDataTransaction.getParcelTN().equalsIgnoreCase(parcelTN) || parcelTN.equalsIgnoreCase("all"))
-                                System.out.println(full ? parcelDataTransaction.getInfo() : parcelDataTransaction.getTruncInfo());
+                        if (all || block.contains(parcelTN)) {
+                            System.out.println(full ? block.getInfo() : block.getTruncInfo());
+                            System.out.println(mainClient.divider);
+                            for (Transaction transaction : block.getTransactions()) {
+                                ParcelDataTransaction parcelDataTransaction = (ParcelDataTransaction) transaction;
+                                String transactionParcelTN = null;
+                                try {
+                                    transactionParcelTN = parcelDataTransaction.getParcelTN();
+                                } catch (NullPointerException e) {
+                                    break;
+                                }
+                                if (all || transactionParcelTN.equals(parcelTN)) {
+                                    System.out.println(full ? parcelDataTransaction.getInfo() : parcelDataTransaction.getTruncInfo());
+                                }
+                            }
+                            System.out.println(mainClient.divider + '\n');
                         }
+
                     }
                     break;
                 case "demo":
@@ -111,7 +123,7 @@ public class Client {
         Block lastBlock = mainBlockArray.get(mainBlockArray.size() - 1);
         if (lastBlock.isFull()) {
             lastBlock.pack(keyPair, mainBlockArray.size() == 1 ? null : mainBlockArray.get(mainBlockArray.size() - 2).getHashCode());
-            lastBlock = new Block(lastBlock.getId() + 1);
+            lastBlock = new Block(lastBlock.getId() + 1, keyPair.getPublic());
             mainBlockArray.add(lastBlock);
         }
         lastBlock.addTransaction(transaction);
@@ -121,25 +133,25 @@ public class Client {
     //TODO: Re-do this function as soon as DB added
     void initMainBlockArray() {
         mainBlockArray = new ArrayList<>();
-        mainBlockArray.add(new Block(0));
+        mainBlockArray.add(new Block(0, keyPair.getPublic()));
     }
 
-    String traceParcel(String parcelTN){
+
+    String traceParcel(String parcelTN) {
         String track = "";
         StringBuilder stringBuilder = new StringBuilder();
-        for(Block block: mainBlockArray){
-            for (Transaction transaction :block.getTransactions()){
+        for (Block block : mainBlockArray) {
+            for (Transaction transaction : block.getTransactions()) {
                 ParcelDataTransaction parcelDataTransaction = (ParcelDataTransaction) transaction;
                 try {
                     if (parcelTN.equals(parcelDataTransaction.getParcelTN()))
                         stringBuilder.append(parcelDataTransaction.getData() + " ----> ");
+                } catch (NullPointerException ignored) {
                 }
-                catch(NullPointerException ignored){}
             }
         }
-        return stringBuilder.substring(0,stringBuilder.length()-7);
+        return stringBuilder.substring(0, stringBuilder.length() - 7);
+
 
     }
-
-
 }

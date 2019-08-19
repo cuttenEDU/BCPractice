@@ -3,7 +3,8 @@ package blockchain;
 import com.google.common.hash.HashCode;
 
 import javax.xml.bind.DatatypeConverter;
-import java.security.PublicKey;
+import java.security.*;
+import java.sql.Time;
 
 public class ParcelDataTransaction implements Transaction {
     private String parcelTN;
@@ -31,12 +32,12 @@ public class ParcelDataTransaction implements Transaction {
         return hashCode;
     }
 
-    public String getInfo() {
-        return "Hashcode: " + hashCode.toString() + "\tPublic key: " + Hasher.bytesToHex(senderPublicKey.getEncoded()) + "\tParcel TN: " + parcelTN + "\tData: " + data + "\tTimestamp: " + timestamp + "\tSignature: " + DatatypeConverter.printHexBinary(signature);
+    String getInfo() throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        return "Hash: " + hashCode.toString() + "\tPubkey: " + Hasher.bytesToHex(senderPublicKey.getEncoded()) + "\tParcel TN: " + parcelTN + "\tData: " + data + "\tTimestamp: " + timestamp + "\tSig: " + DatatypeConverter.printHexBinary(signature) + "\tisValid: " + String.valueOf(isValid());
     }
 
-    public String getTruncInfo() {
-        return "Hashcode: " + truncate(hashCode.toString()) + "\tPublic key: " + truncate(Hasher.bytesToHex(senderPublicKey.getEncoded())) + "\tParcel TN: " + parcelTN + "\tData: " + data + "\tTimestamp: " + timestamp + "\tSignature: " + truncate(DatatypeConverter.printHexBinary(signature));
+    String getTruncInfo() throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        return "Hash: " + truncate(hashCode.toString()) + "\tPubkey: " + truncate(Hasher.bytesToHex(senderPublicKey.getEncoded())) + "\tParcel TN: " + parcelTN + "\tData: " + data + "\tTimestamp: " + timestamp + "\tSig: " + truncate(DatatypeConverter.printHexBinary(signature)) + "\tisValid: " + String.valueOf(isValid());
 
     }
 
@@ -45,10 +46,17 @@ public class ParcelDataTransaction implements Transaction {
     }
 
     String truncate(String string) {
-        return string.substring(0, 6) + "..." + string.substring(string.length() - 7, string.length() - 1);
+        return string.substring(0, 5) + "..." + string.substring(string.length() - 6, string.length() - 1);
     }
 
 
+    boolean isValid() throws InvalidKeyException, SignatureException, NoSuchAlgorithmException {
+        Signature ecdsaVerify = Signature.getInstance("SHA256withECDSA");
+        ecdsaVerify.initVerify(senderPublicKey);
+        ecdsaVerify.update(parcelTN.getBytes());
+        ecdsaVerify.update(data.getBytes());
+        return ecdsaVerify.verify(signature);
+    }
 }
 
 
