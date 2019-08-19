@@ -1,3 +1,7 @@
+import blockchain.Block;
+import blockchain.ParcelDataTransaction;
+import blockchain.Transaction;
+
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
