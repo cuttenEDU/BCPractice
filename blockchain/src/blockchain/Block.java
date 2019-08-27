@@ -35,7 +35,7 @@ public class Block {
 
     }
 
-    int getId() {
+    public int getId() {
         return id;
     }
 
@@ -47,11 +47,11 @@ public class Block {
         return transactions;
     }
 
-    String getInfo() throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+    public String getInfo() throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
         return "Block #" + id + "\t Hash: " + hashCode + "\t Prevhash: " + prevHashCode + "\t Sig: " + (signature == null ? "null" : Hasher.bytesToHex(signature)) + "\tisValid: " + (signature == null ? "null" : String.valueOf(isValid()));
     }
 
-    String getTruncInfo() throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+    public String getTruncInfo() throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
         return "Block #" + id + "\t Hash: " + (hashCode == null ? "null" : truncate(hashCode.toString())) + "\t Prevhash: " + (prevHashCode == null ? "null" : truncate(prevHashCode.toString())) + "\t Sig: " + (signature == null ? "null" : truncate(Hasher.bytesToHex(signature))) + "\tisValid: " + (signature == null ? "null" : String.valueOf(isValid()));
     }
 
@@ -133,7 +133,7 @@ public class Block {
         return ecdsaVerify.verify(signature);
     }
 
-    boolean contains(String parcelTN){
+    public boolean contains(String parcelTN){
         for (Transaction transaction:transactions) {
             if (transaction == null)
                 continue;

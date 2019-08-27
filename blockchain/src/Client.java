@@ -115,7 +115,8 @@ public class Client {
         ecdsa.initSign(keyPair.getPrivate());
         ecdsa.update((parcelTN + data).getBytes(StandardCharsets.UTF_8));
         byte[] signature = ecdsa.sign();
-        return new ParcelDataTransaction(parcelTN, keyPair.getPublic(), data, (System.currentTimeMillis()) / 1000L, signature);
+        return new ParcelDataTransaction();
+        // parcelTN, keyPair.getPublic(),keyPair.getPublic(), data, (System.currentTimeMillis()) / 1000L, signature
 
     }
 
