@@ -1,32 +1,39 @@
 package blockchain;
 
 import com.google.common.hash.HashCode;
+import dev.morphia.annotations.*;
+import org.bson.types.ObjectId;
 
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
 import java.security.*;
+import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
+
+@Indexes(
+        @Index(fields = @Field("hashCode"))
+)
 
 public class Block {
     //TODO: determine how to make size dynamic
-    //TODO: !!!signature!!!
     private final int BLOCK_SIZE = 2;
 
 
+    @Id
+    private ObjectId objectId;
+    private HashCode hashCode;
     private int id;
     private Transaction[] transactions;
-    private PublicKey publicKey;
+    private String publicKey;
     private int nextEmpty;
     private byte[] signature;
-    private HashCode hashCode;
-    private HashCode prevHashCode;
+    @Reference
+    private Block prevBlock;
 
-    public Block(int id, PublicKey publicKey) {
+    public Block(int id) {
         transactions = new Transaction[BLOCK_SIZE];
         this.id = id;
         nextEmpty = 0;
-        prevHashCode = null;
-        this.publicKey = publicKey;
+        prevBlock = null;
     }
 
     public void addTransaction(Transaction transaction) {
@@ -47,13 +54,13 @@ public class Block {
         return transactions;
     }
 
-    public String getInfo() throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        return "Block #" + id + "\t Hash: " + hashCode + "\t Prevhash: " + prevHashCode + "\t Sig: " + (signature == null ? "null" : Hasher.bytesToHex(signature)) + "\tisValid: " + (signature == null ? "null" : String.valueOf(isValid()));
-    }
-
-    public String getTruncInfo() throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        return "Block #" + id + "\t Hash: " + (hashCode == null ? "null" : truncate(hashCode.toString())) + "\t Prevhash: " + (prevHashCode == null ? "null" : truncate(prevHashCode.toString())) + "\t Sig: " + (signature == null ? "null" : truncate(Hasher.bytesToHex(signature))) + "\tisValid: " + (signature == null ? "null" : String.valueOf(isValid()));
-    }
+//    public String getInfo() throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+//        return "Block #" + id + "\t Hash: " + hashCode + "\t Prevhash: " + prevBlock + "\t Sig: " + (signature == null ? "null" : Util.bytesToHex(signature)) + "\tisValid: " + (signature == null ? "null" : String.valueOf(isValid()));
+//    }
+//
+//    public String getTruncInfo() throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+//        return "Block #" + id + "\t Hash: " + (hashCode == null ? "null" : truncate(hashCode.toString())) + "\t Prevhash: " + (prevBlock == null ? "null" : truncate(prevBlock.toString())) + "\t Sig: " + (signature == null ? "null" : truncate(Util.bytesToHex(signature))) + "\tisValid: " + (signature == null ? "null" : String.valueOf(isValid()));
+//    }
 
     public String truncate(String string) {
         if (string == null)
@@ -62,13 +69,14 @@ public class Block {
     }
 
 
-    public void pack(KeyPair keyPair, HashCode prevHashCode) throws Exception {
+    public void pack(KeyPair keyPair, Block prevBlock) throws Exception {
         hashCode = HashCode.fromString(createMercleRoot());
         Signature ecdsa = Signature.getInstance("SHA256withECDSA");
         ecdsa.initSign(keyPair.getPrivate());
         ecdsa.update(hashCode.asBytes());
         signature = ecdsa.sign();
-        this.prevHashCode = prevHashCode;
+        this.prevBlock = prevBlock;
+        publicKey = Util.keyToString(keyPair.getPublic());
     }
 
     private String createMercleRoot() throws NoSuchAlgorithmException {
@@ -76,8 +84,7 @@ public class Block {
             return completeShaString("");
         ArrayList<String> shas = new ArrayList<>(transactions.length);
         for (Transaction transaction : transactions) {
-            ParcelDataTransaction parcelDataTransaction = (ParcelDataTransaction) transaction;
-            shas.add(parcelDataTransaction.getHashCode().toString());
+            shas.add(transaction.getHashCode().toString());
         }
         int count = transactions.length;
         int offset = 0;
@@ -126,9 +133,9 @@ public class Block {
         return builder.append(string).toString();
     }
 
-    boolean isValid() throws InvalidKeyException, SignatureException, NoSuchAlgorithmException {
+    boolean isValid() throws InvalidKeyException, SignatureException, NoSuchAlgorithmException, InvalidKeySpecException {
         Signature ecdsaVerify = Signature.getInstance("SHA256withECDSA");
-        ecdsaVerify.initVerify(publicKey);
+        ecdsaVerify.initVerify((PublicKey)Util.stringToPubKey(publicKey));
         ecdsaVerify.update(hashCode.asBytes());
         return ecdsaVerify.verify(signature);
     }
@@ -137,8 +144,7 @@ public class Block {
         for (Transaction transaction:transactions) {
             if (transaction == null)
                 continue;
-            ParcelDataTransaction parcelDataTransaction = (ParcelDataTransaction) transaction;
-            if (((ParcelDataTransaction) transaction).getParcelTN().equals(parcelTN))
+            if (transaction.getParcelTN().equals(parcelTN))
                 return true;
         }
         return false;
