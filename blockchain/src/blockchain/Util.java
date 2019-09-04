@@ -13,10 +13,10 @@ import java.security.spec.X509EncodedKeySpec;
 
 public class Util {
 
-    static HashCode hash(String string) {
+    static String hash(String string) {
         com.google.common.hash.Hasher hasher = Hashing.sha256().newHasher();
         hasher.putString(string, Charsets.UTF_8);
-        return hasher.hash();
+        return hasher.hash().toString();
     }
 
 
@@ -46,4 +46,20 @@ public class Util {
         EncodedKeySpec privateKeySpec = new X509EncodedKeySpec(string.getBytes());
         return keyFactory.generatePrivate(privateKeySpec);
     }
+
+    public static byte[] hex2bytes(String hex, boolean skipZeros) {
+        if ((hex.length() & 1) == 1) {
+            hex = "0" + hex;
+        }
+        while (hex.startsWith("00") && skipZeros) {
+            hex = hex.substring(2);
+        }
+        byte[] bytes = new byte[hex.length() / 2];
+        String str = "0123456789abcdef";
+        for (int i = 0; i < bytes.length; i++) {
+            bytes[i] = (byte) ((str.indexOf(hex.charAt(i * 2)) << 4) | str.indexOf(hex.charAt(i * 2 + 1)));
+        }
+        return bytes;//new BigInteger(hex, 16).toByteArray();
+    }
+
 }

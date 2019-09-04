@@ -7,7 +7,6 @@ import dev.morphia.annotations.Index;
 import dev.morphia.annotations.Indexes;
 import org.bson.types.ObjectId;
 
-import javax.xml.bind.DatatypeConverter;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 
@@ -19,7 +18,7 @@ public class Transaction {
 
     @Id
     private ObjectId objectId;
-    private HashCode hashCode;
+    private String hashCode;
     private String senderPublicKey;
     private String recieverPublicKey;
     private String parcelTN;
@@ -53,7 +52,7 @@ public class Transaction {
 
     public String getParcelTN() { return parcelTN; }
 
-    public HashCode getHashCode() { return hashCode; }
+    public String getHashCode() { return hashCode; }
 
 
 //    public String getInfo() throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {

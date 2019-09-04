@@ -20,7 +20,7 @@ public class Block {
 
     @Id
     private ObjectId objectId;
-    private HashCode hashCode;
+    private String hashCode;
     private int id;
     private Transaction[] transactions;
     private String publicKey;
@@ -70,10 +70,10 @@ public class Block {
 
 
     public void pack(KeyPair keyPair, Block prevBlock) throws Exception {
-        hashCode = HashCode.fromString(createMercleRoot());
+        hashCode = createMercleRoot();
         Signature ecdsa = Signature.getInstance("SHA256withECDSA");
         ecdsa.initSign(keyPair.getPrivate());
-        ecdsa.update(hashCode.asBytes());
+        ecdsa.update(hashCode.getBytes());
         signature = ecdsa.sign();
         this.prevBlock = prevBlock;
         publicKey = Util.keyToString(keyPair.getPublic());
@@ -118,7 +118,7 @@ public class Block {
         return completeStringWith(sha, 64);
     }
 
-    public HashCode getHashCode() {
+    public String getHashCode() {
         return hashCode;
     }
 
@@ -136,7 +136,7 @@ public class Block {
     boolean isValid() throws InvalidKeyException, SignatureException, NoSuchAlgorithmException, InvalidKeySpecException {
         Signature ecdsaVerify = Signature.getInstance("SHA256withECDSA");
         ecdsaVerify.initVerify((PublicKey)Util.stringToPubKey(publicKey));
-        ecdsaVerify.update(hashCode.asBytes());
+        ecdsaVerify.update(hashCode.getBytes());
         return ecdsaVerify.verify(signature);
     }
 
