@@ -1,6 +1,5 @@
 package blockchain;
 
-import com.google.common.hash.HashCode;
 import dev.morphia.annotations.*;
 import org.bson.types.ObjectId;
 
@@ -9,8 +8,9 @@ import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 
+@Entity("blocks")
 @Indexes(
-        @Index(fields = @Field("hashCode"))
+        @Index(value = "hashCode", fields = @Field("hashCode"))
 )
 
 public class Block {
@@ -22,12 +22,16 @@ public class Block {
     private ObjectId objectId;
     private String hashCode;
     private int id;
+    @Reference
     private Transaction[] transactions;
     private String publicKey;
     private int nextEmpty;
     private byte[] signature;
     @Reference
     private Block prevBlock;
+
+    public Block() {
+    }
 
     public Block(int id) {
         transactions = new Transaction[BLOCK_SIZE];
@@ -54,13 +58,17 @@ public class Block {
         return transactions;
     }
 
-//    public String getInfo() throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-//        return "Block #" + id + "\t Hash: " + hashCode + "\t Prevhash: " + prevBlock + "\t Sig: " + (signature == null ? "null" : Util.bytesToHex(signature)) + "\tisValid: " + (signature == null ? "null" : String.valueOf(isValid()));
-//    }
-//
-//    public String getTruncInfo() throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-//        return "Block #" + id + "\t Hash: " + (hashCode == null ? "null" : truncate(hashCode.toString())) + "\t Prevhash: " + (prevBlock == null ? "null" : truncate(prevBlock.toString())) + "\t Sig: " + (signature == null ? "null" : truncate(Util.bytesToHex(signature))) + "\tisValid: " + (signature == null ? "null" : String.valueOf(isValid()));
-//    }
+    public String getInfo() throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, InvalidKeySpecException {
+        return "Block #" + id + "\t Hash: " + hashCode + "\t Prevhash: " + prevBlock + "\t Sig: " + (signature == null ? "null" : Util.bytes2hex(signature)) + "\tisValid: " + (signature == null ? "null" : isValid());
+    }
+
+    public void printTruncInfo() throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, InvalidKeySpecException {
+        System.out.println("Block #" + id + "\t Hash: " + (hashCode == null ? "null" : truncate(hashCode)) + "\t Prevhash: " + (prevBlock == null ? "null" : truncate(prevBlock.toString())) + "\t Sig: " + (signature == null ? "null" : truncate(Util.bytes2hex(signature))) + "\tisValid: " + (signature == null ? "null" : isValid()));
+        for (Transaction transaction:transactions
+             ) {
+            System.out.println(transaction.getTruncInfo());
+        }
+    }
 
     public String truncate(String string) {
         if (string == null)
@@ -76,7 +84,7 @@ public class Block {
         ecdsa.update(hashCode.getBytes());
         signature = ecdsa.sign();
         this.prevBlock = prevBlock;
-        publicKey = Util.keyToString(keyPair.getPublic());
+        publicKey = Util.k2str(keyPair.getPublic());
     }
 
     private String createMercleRoot() throws NoSuchAlgorithmException {
@@ -135,7 +143,7 @@ public class Block {
 
     boolean isValid() throws InvalidKeyException, SignatureException, NoSuchAlgorithmException, InvalidKeySpecException {
         Signature ecdsaVerify = Signature.getInstance("SHA256withECDSA");
-        ecdsaVerify.initVerify((PublicKey)Util.stringToPubKey(publicKey));
+        ecdsaVerify.initVerify(Util.stringToPubKey(publicKey));
         ecdsaVerify.update(hashCode.getBytes());
         return ecdsaVerify.verify(signature);
     }
@@ -144,7 +152,7 @@ public class Block {
         for (Transaction transaction:transactions) {
             if (transaction == null)
                 continue;
-            if (transaction.getParcelTN().equals(parcelTN))
+            if (transaction.getData().equals(parcelTN))
                 return true;
         }
         return false;
